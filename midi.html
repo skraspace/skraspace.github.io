@@ -8,6 +8,7 @@
 </head>
 <body>
     <h1>MIDI</h1>
+    <p>midi message: </p><div id="msg"></div>
     <script>
         let devices = [];
 // index = -1
@@ -55,10 +56,14 @@ function onControl(msg) {
     const val = msg.data[2]
     // mixer.tweak(ch, knob, val)
     console.log("ch ", ch, "knob ", knob, "value ", val)
+    const el = document.getElementById("msg");
+    el.innerHTML = "ch " + ch + " knob " + knob + " value " + val;
   } else if (msg.data[0] === 144) {
     const pad = msg.data[1]
     const vel = msg.data[2]
     console.log("pad ", pad, "velocity ", vel)
+    const el = document.getElementById("msg");
+    el.innerHTML = "pad " + pad + " velocity " + vel;
     // play(client.channel, pad, vel) // pass a channel here?
   }
 }
