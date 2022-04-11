@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI</title>
+</head>
+<body>
+    <h1>MIDI</h1>
+    <script>
+        let devices = [];
+// index = -1
+
+// controller = null
+// source = null
+
+if (navigator.requestMIDIAccess)
+  navigator.requestMIDIAccess().then(success, fail);
+else
+  alert("No MIDI support present in your browser.  Try Chrome.")
+
+function success(midi) {
+  const inputs = midi.inputs.values();
+  devices = [];
+  for (let i = inputs.next(); i && !i.done; i = inputs.next()) {
+    devices.push(i.value);
+  }
+  list();
+  connect();
+}
+
+function connect(source = 'Midi Through', controller = 'Arturia') {
+  const ctrl = find(controller)
+  const src = find(source)
+
+  if (!ctrl) {
+    console.warn('IO', 'Could not connect ' + controller)
+  } else {
+    console.info('IO', 'Connected to controller ' + ctrl.name)
+    ctrl.onmidimessage = onControl
+  }
+
+  if (!src) {
+    console.warn('IO', 'Could not connect ' + source)
+  } else {
+    console.info('IO', 'Connected to source ' + src.name)
+    src.onmidimessage = onMessage
+  }
+}
+function onControl(msg) {
+  if (msg.data[0] >= 176 && msg.data[0] < 184) {
+    const ch = msg.data[0] - 176
+    const knob = msg.data[1] - 1
+    const val = msg.data[2]
+    // mixer.tweak(ch, knob, val)
+    console.log("ch ", ch, "knob ", knob, "value ", val)
+  } else if (msg.data[0] === 144) {
+    const pad = msg.data[1]
+    const vel = msg.data[2]
+    console.log("pad ", pad, "velocity ", vel)
+    // play(client.channel, pad, vel) // pass a channel here?
+  }
+}
+
+function onMessage(msg) {
+    console.log("msg");
+  if (msg.data[0] >= 144 && msg.data[0] < 160) {
+    const ch = msg.data[0] - 144
+    const pad = msg.data[1] - 24
+    const vel = msg.data[2]
+    play(ch, pad, vel);
+  } else if (msg.data[0] >= 176 && msg.data[0] < 184) {
+    const ch = msg.data[0] - 176
+    const knob = msg.data[1] - 1
+    const vel = msg.data[2]
+    // mixer.tweak(ch, knob, vel)
+  }
+}
+        function find(name) {
+  for (const device of devices) {
+    if (device.name.indexOf(name) < 0) { continue }
+    return device;
+  }
+}
+
+function list() {
+  console.info("Midi devices:")
+  for (const device of devices) {
+    console.info(device.name)
+  }
+}
+
+function fail(err) {
+  console.log("Failed to get MIDI access. Error: " + err);
+}
+    </script>
+</body>
+</html>
